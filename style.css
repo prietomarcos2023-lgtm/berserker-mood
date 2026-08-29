@@ -193,6 +193,12 @@ body {
   color: var(--parchment);
   margin-bottom: 10px;
 }
+.habit-note {
+  font-size: 0.75rem;
+  color: var(--parchment-dim);
+  margin: -4px 0 10px;
+  line-height: 1.4;
+}
 .goal-target { color: var(--parchment-dim); font-size: 0.85rem; }
 .bar {
   height: 6px;
@@ -256,6 +262,17 @@ body {
   border: 1px solid var(--line);
   border-radius: 2px;
   padding: 22px;
+}
+.panel-note {
+  color: var(--parchment-dim);
+  font-size: 0.9rem;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+.haki-stats {
+  display: flex;
+  gap: 40px;
+  margin-bottom: 18px;
 }
 .trade-form {
   display: flex;
