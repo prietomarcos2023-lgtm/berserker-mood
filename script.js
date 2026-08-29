@@ -60,7 +60,8 @@ function getRank(level) {
 const HABITS = [
   { id: "entreno",  label: "Entreno del día (fuerza o cardio bajo impacto)" },
   { id: "trading",  label: "Sesión Londres 3am (protocolo circadiano)" },
-  { id: "ayuno",    label: "Ayuno 24h (objetivo: 1x por semana)" }
+  { id: "ayuno",    label: "Ayuno luna llena (48/72hs)" },
+  { id: "meditacion", label: "Meditación en el alba" }
 ];
 
 const DAY_MS = 86400000;
@@ -88,7 +89,11 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    return { ...defaultState(), ...parsed };
+    const merged = { ...defaultState(), ...parsed };
+    // asegura que cualquier hábito nuevo agregado al sistema exista en el estado guardado
+    const defaultHabits = defaultState().habits;
+    merged.habits = { ...defaultHabits, ...(parsed.habits || {}) };
+    return merged;
   } catch { return defaultState(); }
 }
 
