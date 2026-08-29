@@ -57,6 +57,22 @@ function getRank(level) {
   return current;
 }
 
+const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+function buildMonthKeys() {
+  // setiembre 2026 -> diciembre 2027
+  const keys = [];
+  let y = 2026, m = 8; // índice 8 = setiembre (0-based)
+  while (!(y === 2027 && m === 11)) {
+    keys.push(`${y}-${String(m + 1).padStart(2, "0")}`);
+    m++;
+    if (m > 11) { m = 0; y++; }
+  }
+  keys.push("2027-12");
+  return keys;
+}
+const MONTH_KEYS = buildMonthKeys();
+
 const HABITS = [
   { id: "entreno",  label: "Entreno del día (fuerza o cardio bajo impacto)" },
   { id: "trading",  label: "Sesión Londres 3am (protocolo circadiano)" },
@@ -75,6 +91,7 @@ function defaultState() {
     xp: 0,
     habits,
     payoutTotal: 0,
+    monthlyPayouts: {},
     benchBest: 0,
     weightCurrent: 98,
     englishLevel: "none",
@@ -221,6 +238,38 @@ function renderGoals() {
     (sprintPts(state.sprintTime) / LEVEL_WEIGHTS.sprint) * 100 + "%";
 }
 
+/* ---------- Retiros mensuales ---------- */
+function renderMonths() {
+  const grid = document.getElementById("months-grid");
+  grid.innerHTML = "";
+  MONTH_KEYS.forEach(key => {
+    const [y, m] = key.split("-");
+    const label = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+    const amount = state.monthlyPayouts[key] || 0;
+    const div = document.createElement("div");
+    div.className = "goal month-card";
+    div.innerHTML = `
+      <span class="goal-label">${label}</span>
+      <div class="goal-value">$${amount}</div>
+      <button class="mini-btn" data-month="${key}">+ registrar retiro</button>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+document.getElementById("months-grid").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-month]");
+  if (!btn) return;
+  const key = btn.dataset.month;
+  const val = parseFloat(prompt(`Monto retirado en ${key} (USD):`));
+  if (!val || val <= 0) return;
+  state.monthlyPayouts[key] = (state.monthlyPayouts[key] || 0) + val;
+  state.payoutTotal += val;
+  state.xp += Math.round(val * 0.5);
+  renderMonths(); renderGoals(); renderStage(); saveState();
+  showChest(`Retiro de ${key} registrado — +${Math.round(val * 0.5)} XP`);
+});
+
 document.querySelector('[data-action="add-payout"]').addEventListener("click", () => {
   const val = parseFloat(prompt("Monto retirado en USD:"));
   if (!val || val <= 0) return;
@@ -346,6 +395,7 @@ function renderAll() {
   renderStage();
   renderHabits();
   renderGoals();
+  renderMonths();
   renderTradeLog();
   renderGymLog();
 }
