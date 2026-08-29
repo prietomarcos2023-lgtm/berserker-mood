@@ -161,11 +161,17 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 16px;
 }
+.grid-months {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+}
+.month-card .goal-value { font-size: 1.3rem; }
 @media (max-width: 900px) {
   .grid-5 { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 720px) {
-  .grid-3, .grid-5, .grid-habits { grid-template-columns: 1fr; }
+  .grid-3, .grid-5, .grid-habits, .grid-months { grid-template-columns: 1fr; }
   .card-stage { flex-direction: column; text-align: center; padding: 28px 20px; }
 }
 
