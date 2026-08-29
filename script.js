@@ -75,8 +75,7 @@ const MONTH_KEYS = buildMonthKeys();
 
 const HABITS = [
   { id: "entreno",  label: "Entreno del día (fuerza o cardio bajo impacto)" },
-  { id: "trading",  label: "Sesión Londres 3am (protocolo circadiano)" },
-  { id: "ayuno",    label: "Ayuno luna llena (48/72hs)" },
+  { id: "trading",  label: "Trading Londres and NY", note: "Los 5 días hábiles de la semana — repetición y probabilidad estadística." },
   { id: "meditacion", label: "Meditación en el alba" }
 ];
 
@@ -92,6 +91,7 @@ function defaultState() {
     habits,
     payoutTotal: 0,
     monthlyPayouts: {},
+    hakiLog: [],
     benchBest: 0,
     weightCurrent: 98,
     englishLevel: "none",
@@ -180,6 +180,7 @@ function renderHabits() {
         <span class="habit-label">${hDef.label}</span>
         <span class="streak-count">${h.streak}<span style="font-size:0.6em;color:var(--parchment-dim)">d</span></span>
       </div>
+      ${hDef.note ? `<p class="habit-note">${hDef.note}</p>` : ""}
       <div class="lives">
         ${[0, 1].map(i => `<span class="life-dot ${i < h.lives ? "" : "spent"}"></span>`).join("")}
       </div>
@@ -268,6 +269,21 @@ document.getElementById("months-grid").addEventListener("click", (e) => {
   state.xp += Math.round(val * 0.5);
   renderMonths(); renderGoals(); renderStage(); saveState();
   showChest(`Retiro de ${key} registrado — +${Math.round(val * 0.5)} XP`);
+});
+
+/* ---------- Haki del Rey ---------- */
+function renderHaki() {
+  document.getElementById("haki-count").textContent = state.hakiLog.length;
+  const last = state.hakiLog[state.hakiLog.length - 1];
+  document.getElementById("haki-last").textContent = last ? `${last.date} (${last.hours}hs)` : "—";
+}
+
+document.querySelector('[data-action="add-haki"]').addEventListener("click", () => {
+  const hours = prompt("¿48 o 72 horas de ayuno?", "48");
+  if (hours !== "48" && hours !== "72") return;
+  state.hakiLog.push({ date: todayStr(), hours });
+  renderHaki(); saveState();
+  showChest(`Haki del Rey completado — ${hours}hs`);
 });
 
 document.querySelector('[data-action="add-payout"]').addEventListener("click", () => {
@@ -396,6 +412,7 @@ function renderAll() {
   renderHabits();
   renderGoals();
   renderMonths();
+  renderHaki();
   renderTradeLog();
   renderGymLog();
 }
