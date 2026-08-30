@@ -45,6 +45,9 @@ const BODY_STACKS = 2;
 const CAR_XP = 5000;
 const CAR_STACKS = 4;
 
+const PARENTS_XP = 10000;
+const PARENTS_STACKS = 6;
+
 /* ---------- Nivel global: curva triangular sobre XP real ---------- */
 function xpForLevel(L) { return 50 * L * (L + 1); }
 function levelFromXP(xp) {
@@ -60,6 +63,7 @@ function computeGlobalXP(s) {
   if (s.strengthCompleted) { xp += STRENGTH_XP; stacks += STRENGTH_STACKS; }
   if (s.bodyCompleted)     { xp += BODY_XP;     stacks += BODY_STACKS; }
   if (s.carCompleted)      { xp += CAR_XP;      stacks += CAR_STACKS; }
+  if (s.parentsCompleted)  { xp += PARENTS_XP;  stacks += PARENTS_STACKS; }
   s.totalStacks = stacks;
   return xp;
 }
@@ -112,6 +116,7 @@ function defaultState() {
     weightCurrent: BODY_START,
     bodyCompleted: false,
     carCompleted: false,
+    parentsCompleted: false,
     englishLevel: "none",
     sprintTime: null,
     trades: [],
@@ -243,6 +248,10 @@ function renderQuests() {
   document.getElementById("car-btn").disabled = state.carCompleted;
   if (state.carCompleted) document.getElementById("car-btn").textContent = "Ya conseguido";
 
+  document.getElementById("parents-status").textContent = state.parentsCompleted ? "✓ QUEST COMPLETED" : "";
+  document.getElementById("parents-btn").disabled = state.parentsCompleted;
+  if (state.parentsCompleted) document.getElementById("parents-btn").textContent = "Ya conseguido";
+
   // Trading
   recomputeTrading(state);
   document.getElementById("trading-record").textContent = state.tradingRecord;
@@ -347,6 +356,14 @@ document.querySelector('[data-action="add-car"]').addEventListener("click", () =
   state.carCompleted = true;
   renderQuests(); renderStage(); saveState();
   showChest(`QUEST COMPLETED — MI PRIMER AUTO — +${CAR_XP} XP — +${CAR_STACKS} STACKS`);
+});
+
+document.querySelector('[data-action="add-parents"]').addEventListener("click", () => {
+  if (state.parentsCompleted) return;
+  if (!confirm("¿Confirmás que ya lograste retirar a tus padres? Esto se marca una sola vez.")) return;
+  state.parentsCompleted = true;
+  renderQuests(); renderStage(); saveState();
+  showChest(`QUEST COMPLETED — RETIRAR A MIS PADRES — +${PARENTS_XP} XP — +${PARENTS_STACKS} STACKS`);
 });
 
 document.querySelector('[data-action="add-english"]').addEventListener("click", () => {
