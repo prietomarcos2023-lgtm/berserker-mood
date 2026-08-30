@@ -21,72 +21,90 @@
 
 <main class="wrap">
 
-  <!-- CARTA DE NIVEL -->
+  <!-- NIVEL GLOBAL -->
   <section class="card-stage" id="stage-card">
     <div class="card-corner tl"></div>
     <div class="card-corner tr"></div>
     <div class="card-corner bl"></div>
     <div class="card-corner br"></div>
-    <div class="card-numeral" id="stage-numeral">23</div>
+    <div class="card-numeral" id="stage-numeral">0</div>
     <div class="card-body">
-      <span class="card-label">Etapa actual</span>
-      <h2 class="card-title" id="stage-name">Nivel 23 / 100</h2>
-      <p class="card-desc" id="stage-desc">D-Rank Hunter — el sistema empieza a reconocerte.</p>
+      <span class="card-label">Global Level</span>
+      <h2 class="card-title" id="stage-name">LEVEL 0</h2>
+      <p class="card-desc" id="stage-desc">No sos level alto por planear cosas. Sos level alto por haberlas conseguido.</p>
       <div class="xp-row">
         <div class="xp-track">
           <div class="xp-fill" id="xp-fill"></div>
         </div>
-        <span class="xp-label" id="xp-label">23 / 100</span>
+        <span class="xp-label" id="xp-label">0 / 0 XP</span>
+      </div>
+      <div class="stacks-row">
+        <span class="mono-tag">TOTAL STACKS</span>
+        <span id="total-stacks">0</span>
       </div>
     </div>
   </section>
 
-  <!-- METAS MACRO -->
+  <!-- QUESTS ACTIVAS -->
   <section class="block">
-    <h3 class="block-title"><span class="mono-tag">01</span> Metas ancla</h3>
-    <div class="grid-5">
-      <div class="goal">
-        <span class="goal-label">Retiro acumulado — fondeo</span>
-        <div class="goal-value"><span id="payout-current">$0</span><span class="goal-target"> / $1,000</span></div>
-        <div class="bar"><div class="bar-fill payout" id="payout-bar"></div></div>
-        <button class="mini-btn" data-action="add-payout">+ registrar retiro</button>
-      </div>
-      <div class="goal">
-        <span class="goal-label">Press de banca</span>
+    <h3 class="block-title"><span class="mono-tag">01</span> Quests activas — Sep/Oct</h3>
+    <div class="grid-quests">
+
+      <div class="quest-card">
+        <span class="quest-tag">QUEST 01 — STRENGTH</span>
+        <h4 class="quest-title">100 KG BENCH PRESS</h4>
         <div class="goal-value"><span id="bench-current">0</span> kg<span class="goal-target"> / 100 kg</span></div>
         <div class="bar"><div class="bar-fill bench" id="bench-bar"></div></div>
         <button class="mini-btn" data-action="add-bench">+ registrar PR</button>
+        <span class="quest-status" id="strength-status"></span>
       </div>
-      <div class="goal">
-        <span class="goal-label">Recomposición corporal</span>
-        <div class="goal-value"><span id="weight-current">98</span> kg<span class="goal-target"> / 85 kg</span></div>
+
+      <div class="quest-card">
+        <span class="quest-tag">QUEST 02 — TRADING</span>
+        <h4 class="quest-title" id="trading-quest-title">FIRST PAYOUT</h4>
+        <div class="goal-value">Récord: $<span id="trading-record">0</span></div>
+        <div class="goal-target" id="trading-next">Próximo hito: $250</div>
+        <div class="bar"><div class="bar-fill payout" id="payout-bar"></div></div>
+        <div class="quest-mini-stats">
+          <span>LVL <b id="trading-level">0</b></span>
+          <span>XP <b id="trading-xp">0</b></span>
+          <span>STACKS <b id="trading-stacks">0</b></span>
+        </div>
+        <span class="quest-status">Registrá el retiro del mes en la sección 02 ↓</span>
+      </div>
+
+      <div class="quest-card">
+        <span class="quest-tag">QUEST 03 — BODY</span>
+        <h4 class="quest-title">85 KG</h4>
+        <div class="goal-value"><span id="weight-current">90</span> kg<span class="goal-target"> / 85 kg</span></div>
         <div class="bar"><div class="bar-fill weight" id="weight-bar"></div></div>
         <button class="mini-btn" data-action="add-weight">+ registrar peso</button>
+        <span class="quest-status" id="body-status"></span>
       </div>
-      <div class="goal">
-        <span class="goal-label">Inglés</span>
-        <div class="goal-value"><span id="english-current">Sin empezar</span></div>
-        <div class="bar"><div class="bar-fill english" id="english-bar"></div></div>
-        <button class="mini-btn" data-action="add-english">+ registrar nivel</button>
+
+      <div class="quest-card">
+        <span class="quest-tag">BONUS QUEST</span>
+        <h4 class="quest-title">MI PRIMER AUTO</h4>
+        <div class="goal-value">+5000 XP</div>
+        <p class="quest-hint">Hito de una sola vez, no se mide en progreso — se marca cuando pasa.</p>
+        <button class="mini-btn" data-action="add-car" id="car-btn">Marcar conseguido</button>
+        <span class="quest-status" id="car-status"></span>
       </div>
-      <div class="goal">
-        <span class="goal-label">Sprint 100m</span>
-        <div class="goal-value"><span id="sprint-current">— s</span></div>
-        <div class="bar"><div class="bar-fill sprint" id="sprint-bar"></div></div>
-        <button class="mini-btn" data-action="add-sprint">+ registrar tiempo</button>
-      </div>
+
     </div>
   </section>
 
   <!-- RETIROS MENSUALES -->
   <section class="block">
     <h3 class="block-title"><span class="mono-tag">02</span> Retiros de trading — por mes</h3>
+    <p class="panel-note">Solo cuenta si supera el récord mensual anterior. Retirar menos o igual no suma XP ni desbloquea nada — no se inventa progreso.</p>
     <div class="grid-months" id="months-grid"></div>
   </section>
 
   <!-- HABITOS CLASE S -->
   <section class="block">
     <h3 class="block-title"><span class="mono-tag">03</span> Hábitos clase S — el motor diario</h3>
+    <p class="panel-note">Sostienen la ejecución de las quests. No otorgan XP de nivel global directamente.</p>
     <div class="grid-habits" id="habits-grid"></div>
   </section>
 
@@ -94,7 +112,7 @@
   <section class="block">
     <h3 class="block-title"><span class="mono-tag">04</span> Haki del Rey — maxing</h3>
     <div class="panel haki-panel">
-      <p class="panel-note">Ayuno de luna llena (48/72hs) + meditación concentrada. No es un hábito diario, es fuerza de voluntad puesta a prueba cuando el sistema lo exige.</p>
+      <p class="panel-note">Ayuno de luna llena (48/72hs) + meditación concentrada. Maxing de concentración, capacidad intuitiva, metacognición y control de impulsos. 0 XP — es herramienta para ejecutar las quests, no una quest en sí misma.</p>
       <div class="haki-stats">
         <div>
           <span class="goal-label">Veces completado</span>
@@ -109,9 +127,43 @@
     </div>
   </section>
 
-  <!-- TRADING -->
+  <!-- SKILLS EN PAUSA -->
   <section class="block">
-    <h3 class="block-title"><span class="mono-tag">05</span> Disciplina de ejecución — CRT</h3>
+    <h3 class="block-title"><span class="mono-tag">05</span> Skills en pausa — 0 XP</h3>
+    <p class="panel-note">Se activan más adelante como quests propias. Por ahora no suman al nivel global.</p>
+    <div class="grid-5">
+      <div class="goal locked">
+        <span class="goal-label">Inglés</span>
+        <div class="goal-value"><span id="english-current">Sin empezar</span></div>
+        <button class="mini-btn" data-action="add-english">+ registrar nivel</button>
+      </div>
+      <div class="goal locked">
+        <span class="goal-label">Sprint 100m</span>
+        <div class="goal-value"><span id="sprint-current">— s</span></div>
+        <button class="mini-btn" data-action="add-sprint">+ registrar tiempo</button>
+      </div>
+      <div class="goal locked static">
+        <span class="goal-label">Piano</span>
+        <div class="goal-value">🔒 Sin activar</div>
+      </div>
+      <div class="goal locked static">
+        <span class="goal-label">Guitarra</span>
+        <div class="goal-value">🔒 Sin activar</div>
+      </div>
+      <div class="goal locked static">
+        <span class="goal-label">Francés</span>
+        <div class="goal-value">🔒 Sin activar</div>
+      </div>
+      <div class="goal locked static">
+        <span class="goal-label">Muay Thai</span>
+        <div class="goal-value">🔒 Sin activar</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRADING CRT -->
+  <section class="block">
+    <h3 class="block-title"><span class="mono-tag">06</span> Disciplina de ejecución — CRT</h3>
     <div class="panel">
       <form id="trade-form" class="trade-form">
         <select id="trade-account">
@@ -139,7 +191,7 @@
 
   <!-- FISICO -->
   <section class="block">
-    <h3 class="block-title"><span class="mono-tag">06</span> Cuerpo — sesiones y cargas</h3>
+    <h3 class="block-title"><span class="mono-tag">07</span> Cuerpo — sesiones y cargas</h3>
     <div class="panel">
       <form id="gym-form" class="trade-form">
         <select id="gym-type">
