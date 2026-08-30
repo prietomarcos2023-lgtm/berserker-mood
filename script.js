@@ -33,7 +33,7 @@ function nextTradingMilestone(s) {
 }
 
 /* ---------- XP fijo por quest única ---------- */
-const STRENGTH_TARGET = 100;
+const STRENGTH_TARGET = 120;
 const STRENGTH_XP = 2000;
 const STRENGTH_STACKS = 3;
 
