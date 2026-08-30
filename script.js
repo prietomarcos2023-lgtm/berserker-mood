@@ -1,60 +1,67 @@
 /* ============================================================
-   BITÁCORA DEL SOBERANO — motor de puntaje
-   Filosofía: el número sube por el proceso, no por el resultado.
+   BERSERKER MOOD — motor de progresión
+   Filosofía: el nivel sube por HITOS REALES Y VERIFICABLES,
+   no por actividad ni por planear cosas.
    ============================================================ */
 
 const STORAGE_KEY = "bitacora-soberano-v1";
 
-/* ============================================================
-   NIVEL 1-100 (estilo Solo Leveling) — calculado directo de
-   4 stats ancla, no de un contador de XP acumulado por clics.
-   Pesos: el retiro de trading es el que más pesa (40 pts),
-   porque es lo que más lo va a levelear a futuro.
-   ============================================================ */
-const LEVEL_WEIGHTS = { bench: 33, payout: 40, english: 17, sprint: 10 };
-
-const ENGLISH_LEVELS = [
-  { key: "none",      label: "Sin empezar", pts: 0 },
-  { key: "A1",         label: "A1",          pts: 3 },
-  { key: "A2",         label: "A2",          pts: 6 },
-  { key: "B1",         label: "B1",          pts: 9 },
-  { key: "B2",         label: "B2",          pts: 13 },
-  { key: "Avanzado",   label: "Avanzado",    pts: 17 }
+/* ---------- Trading: sistema de récord mensual ---------- */
+const TRADING_MILESTONES = [
+  { level: 1, target: 250,   xp: 100,  stacks: 1 },
+  { level: 2, target: 500,   xp: 250,  stacks: 2 },
+  { level: 3, target: 1000,  xp: 500,  stacks: 3 },
+  { level: 4, target: 5000,  xp: 1500, stacks: 5 },
+  { level: 5, target: 10000, xp: 3000, stacks: 8 }
 ];
 
-const HUNTER_RANKS = [
-  { min: 0,  label: "E-Rank Hunter",           desc: "Apenas despertaste. Todo lo demás se construye desde acá." },
-  { min: 15, label: "D-Rank Hunter",            desc: "El sistema empieza a reconocerte." },
-  { min: 30, label: "C-Rank Hunter",            desc: "Ya no es casualidad. Es método." },
-  { min: 45, label: "B-Rank Hunter",            desc: "El cuerpo y el capital empiezan a moverse juntos." },
-  { min: 60, label: "A-Rank Hunter",            desc: "Pocos llegan acá sin romperse antes." },
-  { min: 75, label: "S-Rank Hunter",            desc: "Nivel de élite. El sistema sos vos." },
-  { min: 90, label: "Monarca de las Sombras",   desc: "No queda nada que demostrar. Solo ejecutar." }
-];
-
-function englishPts(key) {
-  const e = ENGLISH_LEVELS.find(x => x.key === key) || ENGLISH_LEVELS[0];
-  return e.pts;
+function recomputeTrading(s) {
+  const values = Object.values(s.monthlyPayouts || {});
+  const record = values.length ? Math.max(0, ...values) : 0;
+  s.tradingRecord = record;
+  let level = 0, xp = 0, stacks = 0;
+  TRADING_MILESTONES.forEach(m => {
+    if (record >= m.target) { level = m.level; xp += m.xp; stacks += m.stacks; }
+  });
+  s.tradingLevel = level;
+  s.tradingXP = xp;
+  s.tradingStacks = stacks;
 }
 
-function sprintPts(time) {
-  if (!time || time <= 0) return 0;
-  return Math.max(0, Math.min(LEVEL_WEIGHTS.sprint, Math.round(21 - time)));
+function nextTradingMilestone(s) {
+  return TRADING_MILESTONES.find(m => s.tradingRecord < m.target) || null;
 }
 
-function computeLevel(s) {
-  const benchPts   = Math.min(LEVEL_WEIGHTS.bench, (s.benchBest / 100) * LEVEL_WEIGHTS.bench);
-  const payoutPts  = Math.min(LEVEL_WEIGHTS.payout, (s.payoutTotal / 1000) * LEVEL_WEIGHTS.payout);
-  const engPts     = englishPts(s.englishLevel);
-  const sprPts     = sprintPts(s.sprintTime);
-  const total = benchPts + payoutPts + engPts + sprPts;
-  return Math.max(1, Math.min(100, Math.round(total)));
+/* ---------- XP fijo por quest única ---------- */
+const STRENGTH_TARGET = 100;
+const STRENGTH_XP = 2000;
+const STRENGTH_STACKS = 3;
+
+const BODY_START = 90;
+const BODY_TARGET = 85;
+const BODY_XP = 1500;
+const BODY_STACKS = 2;
+
+const CAR_XP = 5000;
+const CAR_STACKS = 4;
+
+/* ---------- Nivel global: curva triangular sobre XP real ---------- */
+function xpForLevel(L) { return 50 * L * (L + 1); }
+function levelFromXP(xp) {
+  let L = 0;
+  while (xpForLevel(L + 1) <= xp) L++;
+  return L;
 }
 
-function getRank(level) {
-  let current = HUNTER_RANKS[0];
-  for (const r of HUNTER_RANKS) if (level >= r.min) current = r;
-  return current;
+function computeGlobalXP(s) {
+  recomputeTrading(s);
+  let xp = s.tradingXP;
+  let stacks = s.tradingStacks;
+  if (s.strengthCompleted) { xp += STRENGTH_XP; stacks += STRENGTH_STACKS; }
+  if (s.bodyCompleted)     { xp += BODY_XP;     stacks += BODY_STACKS; }
+  if (s.carCompleted)      { xp += CAR_XP;      stacks += CAR_STACKS; }
+  s.totalStacks = stacks;
+  return xp;
 }
 
 const MONTH_NAMES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -73,6 +80,15 @@ function buildMonthKeys() {
 }
 const MONTH_KEYS = buildMonthKeys();
 
+const ENGLISH_LEVELS = [
+  { key: "none",      label: "Sin empezar" },
+  { key: "A1",        label: "A1" },
+  { key: "A2",        label: "A2" },
+  { key: "B1",        label: "B1" },
+  { key: "B2",        label: "B2" },
+  { key: "Avanzado",  label: "Avanzado" }
+];
+
 const HABITS = [
   { id: "entreno",  label: "Entreno del día (fuerza o cardio bajo impacto)" },
   { id: "trading",  label: "Trading Londres and NY", note: "Los 5 días hábiles de la semana — repetición y probabilidad estadística." },
@@ -87,13 +103,15 @@ function defaultState() {
   const habits = {};
   HABITS.forEach(h => { habits[h.id] = { streak: 0, lives: 2, lastDate: null }; });
   return {
-    xp: 0,
     habits,
-    payoutTotal: 0,
     monthlyPayouts: {},
+    tradingRecord: 0, tradingLevel: 0, tradingXP: 0, tradingStacks: 0,
     hakiLog: [],
     benchBest: 0,
-    weightCurrent: 98,
+    strengthCompleted: false,
+    weightCurrent: BODY_START,
+    bodyCompleted: false,
+    carCompleted: false,
     englishLevel: "none",
     sprintTime: null,
     trades: [],
@@ -120,31 +138,30 @@ function saveState() {
 
 let state = loadState();
 
-/* ---------- Cofre: recompensa variable ---------- */
-function maybeChest(baseLabel) {
-  if (Math.random() < 0.22) {
-    const bonus = Math.floor(Math.random() * 16) + 5; // 5-20
-    state.xp += bonus;
-    showChest(`Cofre — ${baseLabel} +${bonus} XP extra`);
-  }
-}
-
 function showChest(msg) {
   const el = document.getElementById("chest-toast");
   el.textContent = msg;
   el.classList.add("show");
-  setTimeout(() => el.classList.remove("show"), 2600);
+  setTimeout(() => el.classList.remove("show"), 3200);
 }
 
-/* ---------- Nivel ---------- */
+/* ---------- Nivel global ---------- */
 function renderStage() {
-  const level = computeLevel(state);
-  const rank = getRank(level);
+  const totalXP = computeGlobalXP(state);
+  const level = levelFromXP(totalXP);
+  const floor = xpForLevel(level);
+  const ceil = xpForLevel(level + 1);
+  const pct = ceil > floor ? Math.min(100, ((totalXP - floor) / (ceil - floor)) * 100) : 0;
+
   document.getElementById("stage-numeral").textContent = level;
-  document.getElementById("stage-name").textContent = `Nivel ${level} / 100`;
-  document.getElementById("stage-desc").textContent = `${rank.label} — ${rank.desc}`;
-  document.getElementById("xp-fill").style.width = level + "%";
-  document.getElementById("xp-label").textContent = `${level} / 100`;
+  document.getElementById("stage-name").textContent = `LEVEL ${level}`;
+  document.getElementById("stage-desc").textContent =
+    totalXP === 0
+      ? "Cero hitos completados todavía. El sistema no miente."
+      : "No sos level alto por planear cosas. Sos level alto por haberlas conseguido.";
+  document.getElementById("xp-fill").style.width = pct + "%";
+  document.getElementById("xp-label").textContent = `${totalXP} / ${ceil} XP`;
+  document.getElementById("total-stacks").textContent = state.totalStacks;
 }
 
 /* ---------- Hábitos: procesar días perdidos ---------- */
@@ -204,39 +221,48 @@ document.addEventListener("click", (e) => {
   h.streak = wasYesterday || h.streak === 0 ? h.streak + 1 : 1;
   h.lastDate = todayStr();
 
-  const multiplier = Math.min(2, 1 + Math.floor(h.streak / 7) * 0.1);
-  const gained = Math.round(10 * multiplier);
-  state.xp += gained;
-
-  const label = HABITS.find(x => x.id === id).label;
-  showChest(`+${gained} XP — racha x${h.streak}`);
-  maybeChest(label);
-
   renderHabits();
-  renderStage();
+  saveState();
 });
 
-/* ---------- Metas macro ---------- */
-function renderGoals() {
-  document.getElementById("payout-current").textContent = "$" + state.payoutTotal;
-  document.getElementById("payout-bar").style.width = Math.min(100, (state.payoutTotal / 1000) * 100) + "%";
-
+/* ---------- Quests principales ---------- */
+function renderQuests() {
+  // Strength
   document.getElementById("bench-current").textContent = state.benchBest;
-  document.getElementById("bench-bar").style.width = Math.min(100, (state.benchBest / 100) * 100) + "%";
+  document.getElementById("bench-bar").style.width = Math.min(100, (state.benchBest / STRENGTH_TARGET) * 100) + "%";
+  document.getElementById("strength-status").textContent = state.strengthCompleted ? "✓ QUEST COMPLETED" : "";
 
+  // Body
   document.getElementById("weight-current").textContent = state.weightCurrent;
-  const wPct = Math.min(100, Math.max(0, ((98 - state.weightCurrent) / (98 - 85)) * 100));
+  const wPct = Math.min(100, Math.max(0, ((BODY_START - state.weightCurrent) / (BODY_START - BODY_TARGET)) * 100));
   document.getElementById("weight-bar").style.width = wPct + "%";
+  document.getElementById("body-status").textContent = state.bodyCompleted ? "✓ QUEST COMPLETED" : "";
 
+  // Car
+  document.getElementById("car-status").textContent = state.carCompleted ? "✓ QUEST COMPLETED" : "";
+  document.getElementById("car-btn").disabled = state.carCompleted;
+  if (state.carCompleted) document.getElementById("car-btn").textContent = "Ya conseguido";
+
+  // Trading
+  recomputeTrading(state);
+  document.getElementById("trading-record").textContent = state.tradingRecord;
+  document.getElementById("trading-level").textContent = state.tradingLevel;
+  document.getElementById("trading-xp").textContent = state.tradingXP;
+  document.getElementById("trading-stacks").textContent = state.tradingStacks;
+  const next = nextTradingMilestone(state);
+  const titles = { 0: "FIRST PAYOUT", 1: "PAYOUT $500", 2: "PAYOUT $1.000", 3: "PAYOUT $5.000", 4: "PAYOUT $10.000" };
+  document.getElementById("trading-quest-title").textContent = next ? titles[TRADING_MILESTONES.indexOf(next)] : "MAX TRADING LEVEL";
+  document.getElementById("trading-next").textContent = next ? `Próximo hito: $${next.target}` : "Todos los hitos desbloqueados";
+  const target = next ? next.target : TRADING_MILESTONES[TRADING_MILESTONES.length - 1].target;
+  document.getElementById("payout-bar").style.width = Math.min(100, (state.tradingRecord / target) * 100) + "%";
+}
+
+/* ---------- Skills en pausa (0 XP) ---------- */
+function renderSkills() {
   const eng = ENGLISH_LEVELS.find(x => x.key === state.englishLevel) || ENGLISH_LEVELS[0];
   document.getElementById("english-current").textContent = eng.label;
-  document.getElementById("english-bar").style.width =
-    (eng.pts / LEVEL_WEIGHTS.english) * 100 + "%";
-
   document.getElementById("sprint-current").textContent =
     state.sprintTime ? state.sprintTime + " s" : "— s";
-  document.getElementById("sprint-bar").style.width =
-    (sprintPts(state.sprintTime) / LEVEL_WEIGHTS.sprint) * 100 + "%";
 }
 
 /* ---------- Retiros mensuales ---------- */
@@ -262,13 +288,20 @@ document.getElementById("months-grid").addEventListener("click", (e) => {
   const btn = e.target.closest("[data-month]");
   if (!btn) return;
   const key = btn.dataset.month;
-  const val = parseFloat(prompt(`Monto retirado en ${key} (USD):`));
+  const val = parseFloat(prompt(`Monto retirado en ${key} (USD) — reemplaza el valor de ese mes:`));
   if (!val || val <= 0) return;
-  state.monthlyPayouts[key] = (state.monthlyPayouts[key] || 0) + val;
-  state.payoutTotal += val;
-  state.xp += Math.round(val * 0.5);
-  renderMonths(); renderGoals(); renderStage(); saveState();
-  showChest(`Retiro de ${key} registrado — +${Math.round(val * 0.5)} XP`);
+  const prevRecord = state.tradingRecord;
+  state.monthlyPayouts[key] = val;
+  recomputeTrading(state);
+  renderMonths(); renderQuests(); renderStage(); saveState();
+  if (state.tradingRecord > prevRecord) {
+    const hit = TRADING_MILESTONES.find(m => state.tradingRecord >= m.target && prevRecord < m.target);
+    if (hit) {
+      showChest(`TRADING LEVEL ${hit.level} — $${hit.target} WITHDRAWN — +${hit.xp} XP — +${hit.stacks} STACK${hit.stacks > 1 ? "S" : ""}`);
+    } else {
+      showChest(`Nuevo récord: $${state.tradingRecord} (sin nuevo hito todavía)`);
+    }
+  }
 });
 
 /* ---------- Haki del Rey ---------- */
@@ -286,32 +319,34 @@ document.querySelector('[data-action="add-haki"]').addEventListener("click", () 
   showChest(`Haki del Rey completado — ${hours}hs`);
 });
 
-document.querySelector('[data-action="add-payout"]').addEventListener("click", () => {
-  const val = parseFloat(prompt("Monto retirado en USD:"));
-  if (!val || val <= 0) return;
-  state.payoutTotal += val;
-  state.xp += Math.round(val * 0.5); // el retiro también alimenta XP, no solo la barra
-  renderGoals(); renderStage(); saveState();
-  showChest(`Retiro registrado — +${Math.round(val * 0.5)} XP`);
-});
-
 document.querySelector('[data-action="add-bench"]').addEventListener("click", () => {
   const val = parseFloat(prompt("Nuevo PR de press de banca (kg):"));
   if (!val || val <= 0) return;
-  if (val > state.benchBest) {
-    const bonus = Math.round((val - state.benchBest) * 5);
-    state.benchBest = val;
-    state.xp += bonus;
-    showChest(`Nuevo PR — +${bonus} XP`);
+  state.benchBest = val;
+  if (val >= STRENGTH_TARGET && !state.strengthCompleted) {
+    state.strengthCompleted = true;
+    showChest(`STRENGTH QUEST COMPLETED — 100KG BENCH PRESS — +${STRENGTH_XP} XP — +${STRENGTH_STACKS} STACKS`);
   }
-  renderGoals(); renderStage(); saveState();
+  renderQuests(); renderStage(); saveState();
 });
 
 document.querySelector('[data-action="add-weight"]').addEventListener("click", () => {
   const val = parseFloat(prompt("Peso actual (kg):"));
   if (!val || val <= 0) return;
   state.weightCurrent = val;
-  renderGoals(); saveState();
+  if (val <= BODY_TARGET && !state.bodyCompleted) {
+    state.bodyCompleted = true;
+    showChest(`BODY QUEST COMPLETED — 85KG — +${BODY_XP} XP — +${BODY_STACKS} STACKS`);
+  }
+  renderQuests(); renderStage(); saveState();
+});
+
+document.querySelector('[data-action="add-car"]').addEventListener("click", () => {
+  if (state.carCompleted) return;
+  if (!confirm("¿Confirmás que ya conseguiste tu primer auto? Esto se marca una sola vez.")) return;
+  state.carCompleted = true;
+  renderQuests(); renderStage(); saveState();
+  showChest(`QUEST COMPLETED — MI PRIMER AUTO — +${CAR_XP} XP — +${CAR_STACKS} STACKS`);
 });
 
 document.querySelector('[data-action="add-english"]').addEventListener("click", () => {
@@ -319,19 +354,15 @@ document.querySelector('[data-action="add-english"]').addEventListener("click", 
   const val = (prompt(`Nuevo nivel de inglés (${opts}):`) || "").trim().toUpperCase();
   const match = ENGLISH_LEVELS.find(x => x.key.toUpperCase() === val || x.label.toUpperCase() === val);
   if (!match) return;
-  const before = englishPts(state.englishLevel);
   state.englishLevel = match.key;
-  if (englishPts(match.key) > before) showChest(`Inglés ${match.label} — nivel actualizado`);
-  renderGoals(); renderStage(); saveState();
+  renderSkills(); saveState();
 });
 
 document.querySelector('[data-action="add-sprint"]').addEventListener("click", () => {
   const val = parseFloat(prompt("Tiempo en 100m (segundos):"));
   if (!val || val <= 0) return;
-  const improved = !state.sprintTime || val < state.sprintTime;
   state.sprintTime = val;
-  if (improved) showChest(`Nuevo tiempo en 100m — ${val}s`);
-  renderGoals(); renderStage(); saveState();
+  renderSkills(); saveState();
 });
 
 /* ---------- Trading ---------- */
@@ -349,11 +380,9 @@ document.getElementById("trade-form").addEventListener("submit", (e) => {
   } else {
     pts -= 30;
   }
-  state.xp = Math.max(0, state.xp + pts);
   state.trades.unshift({ account, rules, result, rr, pts, date: todayStr() });
-  if (pts > 0) maybeChest("operación disciplinada");
 
-  renderTradeLog(); renderStage(); saveState();
+  renderTradeLog(); saveState();
   e.target.reset();
 });
 
@@ -372,12 +401,9 @@ document.getElementById("gym-form").addEventListener("submit", (e) => {
   e.preventDefault();
   const type = document.getElementById("gym-type").value;
   const note = document.getElementById("gym-note").value;
-  const pts = 20;
-  state.xp += pts;
-  state.gymSessions.unshift({ type, note, pts, date: todayStr() });
-  maybeChest("sesión completada");
+  state.gymSessions.unshift({ type, note, date: todayStr() });
 
-  renderGymLog(); renderStage(); saveState();
+  renderGymLog(); saveState();
   e.target.reset();
 });
 
@@ -386,7 +412,6 @@ function renderGymLog() {
   log.innerHTML = state.gymSessions.slice(0, 12).map(g => `
     <div class="log-row">
       <span>${g.date} · ${g.type}${g.note ? " · " + g.note : ""}</span>
-      <span class="pts pos">+${g.pts}</span>
     </div>
   `).join("");
 }
@@ -410,7 +435,8 @@ document.getElementById("export-btn").addEventListener("click", () => {
 function renderAll() {
   renderStage();
   renderHabits();
-  renderGoals();
+  renderQuests();
+  renderSkills();
   renderMonths();
   renderHaki();
   renderTradeLog();
