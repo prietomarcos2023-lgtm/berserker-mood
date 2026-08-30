@@ -48,6 +48,9 @@ const CAR_STACKS = 4;
 const PARENTS_XP = 10000;
 const PARENTS_STACKS = 6;
 
+const LAND_XP = 15000;
+const LAND_STACKS = 8;
+
 /* ---------- Nivel global: curva triangular sobre XP real ---------- */
 function xpForLevel(L) { return 50 * L * (L + 1); }
 function levelFromXP(xp) {
@@ -64,6 +67,7 @@ function computeGlobalXP(s) {
   if (s.bodyCompleted)     { xp += BODY_XP;     stacks += BODY_STACKS; }
   if (s.carCompleted)      { xp += CAR_XP;      stacks += CAR_STACKS; }
   if (s.parentsCompleted)  { xp += PARENTS_XP;  stacks += PARENTS_STACKS; }
+  if (s.landCompleted)     { xp += LAND_XP;     stacks += LAND_STACKS; }
   s.totalStacks = stacks;
   return xp;
 }
@@ -117,6 +121,7 @@ function defaultState() {
     bodyCompleted: false,
     carCompleted: false,
     parentsCompleted: false,
+    landCompleted: false,
     englishLevel: "none",
     sprintTime: null,
     trades: [],
@@ -252,6 +257,10 @@ function renderQuests() {
   document.getElementById("parents-btn").disabled = state.parentsCompleted;
   if (state.parentsCompleted) document.getElementById("parents-btn").textContent = "Ya conseguido";
 
+  document.getElementById("land-status").textContent = state.landCompleted ? "✓ QUEST COMPLETED" : "";
+  document.getElementById("land-btn").disabled = state.landCompleted;
+  if (state.landCompleted) document.getElementById("land-btn").textContent = "Ya conseguido";
+
   // Trading
   recomputeTrading(state);
   document.getElementById("trading-record").textContent = state.tradingRecord;
@@ -364,6 +373,14 @@ document.querySelector('[data-action="add-parents"]').addEventListener("click", 
   state.parentsCompleted = true;
   renderQuests(); renderStage(); saveState();
   showChest(`QUEST COMPLETED — RETIRAR A MIS PADRES — +${PARENTS_XP} XP — +${PARENTS_STACKS} STACKS`);
+});
+
+document.querySelector('[data-action="add-land"]').addEventListener("click", () => {
+  if (state.landCompleted) return;
+  if (!confirm("¿Confirmás que ya compraste el terreno al lado de la casa de tu mamá? Esto se marca una sola vez.")) return;
+  state.landCompleted = true;
+  renderQuests(); renderStage(); saveState();
+  showChest(`QUEST COMPLETED — TERRENO CASA DE MAMÁ — +${LAND_XP} XP — +${LAND_STACKS} STACKS`);
 });
 
 document.querySelector('[data-action="add-english"]').addEventListener("click", () => {
