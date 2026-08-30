@@ -328,24 +328,41 @@ body {
 .quest-card.legendary::after {
   content: "";
   position: absolute;
-  width: 34px;
-  height: 34px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 2 L4 14 H11 L9 22 L20 8 H13 Z' fill='%23FF5C5C'/%3E%3C/svg%3E");
+  width: 26px;
+  height: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 40'%3E%3Cpath d='M14 1 L4 18 L11 18 L7 39 L21 15 L13 15 Z' fill='none' stroke='%23FF5C5C' stroke-width='1.4' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-size: contain;
   background-repeat: no-repeat;
-  filter: drop-shadow(0 0 6px rgba(255,92,92,0.9));
-  animation: haki-flicker 2.6s infinite ease-in-out;
+  filter: drop-shadow(0 0 5px rgba(255,92,92,0.9));
+  animation: haki-flicker 2.6s infinite ease-in-out, haki-drift 3.4s infinite ease-in-out;
   pointer-events: none;
 }
-.quest-card.legendary::before { top: -8px; right: -6px; transform: rotate(12deg); }
-.quest-card.legendary::after { bottom: -8px; left: -6px; transform: rotate(-160deg); animation-delay: 1.1s; }
+.quest-card.legendary::before { top: -10px; right: -4px; transform-origin: center; }
+.quest-card.legendary::after { bottom: -10px; left: -4px; transform: rotate(178deg); animation-delay: 1.1s, 0.6s; }
 @keyframes haki-flicker {
   0%, 100% { opacity: 0.85; }
-  8%  { opacity: 0.2; }
+  8%  { opacity: 0.15; }
   16% { opacity: 0.9; }
-  40% { opacity: 0.5; }
+  40% { opacity: 0.45; }
   60% { opacity: 1; }
-  80% { opacity: 0.3; }
+  80% { opacity: 0.25; }
+}
+@keyframes haki-drift {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  25%  { transform: translate(-2px, 3px) rotate(-4deg); }
+  50%  { transform: translate(1px, -2px) rotate(3deg); }
+  75%  { transform: translate(-1px, 2px) rotate(-2deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.quest-card.legendary::after {
+  animation-name: haki-flicker, haki-drift-flip;
+}
+@keyframes haki-drift-flip {
+  0%   { transform: rotate(178deg) translate(0, 0); }
+  25%  { transform: rotate(174deg) translate(2px, -3px); }
+  50%  { transform: rotate(181deg) translate(-1px, 2px); }
+  75%  { transform: rotate(176deg) translate(1px, -2px); }
+  100% { transform: rotate(178deg) translate(0, 0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .quest-card.legendary::before, .quest-card.legendary::after { animation: none; opacity: 0.7; }
